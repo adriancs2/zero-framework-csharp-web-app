@@ -1,0 +1,7 @@
+[Theme]
+name = ValentineLight
+description = A romantic, airy light-mode theme. Soft blush-cream paper, rose-red and warm pink accents, deep plum ink for crisp reading. Gentle shadows and tender petal cards — the bright daytime counterpart to Valentine. Playfair Display + Karla + JetBrains Mono.
+author = Hearth CMS
+url = Github Hearth CMS
+version = 1
+date: 2026-06-05

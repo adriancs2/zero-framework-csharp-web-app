@@ -1,0 +1,7 @@
+[Theme]
+name = Cipher
+description = Terminal and brutalist. Monospace on dark phosphor, with framed terminal windows, file-cards and command-prompt log rows.
+author = Hearth CMS
+url = Github Hearth CMS
+version = 1
+date: 2026-06-04

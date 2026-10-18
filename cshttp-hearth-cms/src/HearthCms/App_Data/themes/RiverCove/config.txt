@@ -1,0 +1,7 @@
+[Theme]
+name = RiverCove
+description = A cool, lush forest-and-water theme leaning dark. Near-black pine-green ground, misty teal/aqua highlights like light on a stream, and a soft moss accent. Smooth river-stone cards and rippling rules. Spectral + Mulish + JetBrains Mono.
+author = Hearth CMS
+url = Github Hearth CMS
+version = 1
+date: 2026-06-05

@@ -1,0 +1,45 @@
+﻿<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <meta charset='utf-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+    {{head_meta}}
+    <link rel='stylesheet' href='/fonts/fontawesome/css/all.min.css' />
+    <link rel='preconnect' href='https://fonts.googleapis.com'>
+    <link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>
+    <link rel='stylesheet' href='https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&display=swap'>
+    <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css'>
+    <link rel='stylesheet' href='/assets/themes/Mosaic/mosaic.css?v=2' />
+</head>
+<body>
+<a class='skip-link' href='#main'>Skip to content</a>
+<header class='glass-head'>
+    <div class='wrap'>
+        <div class='nav-pill'>
+            {{site_logo}}
+            <button class='nav-toggle' onclick='toggleNav()' aria-label='Menu' aria-controls='siteNav'>
+                <i class='fa-solid fa-bars'></i>
+            </button>
+            <nav class='site-nav' id='siteNav'>
+                {{nav_items}}
+            </nav>
+        </div>
+    </div>
+</header>
+<div class='nav-overlay' id='navOverlay' onclick='toggleNav()'></div>
+<main class='m-main' id='main'>
+{{body}}
+</main>
+<footer class='glass-foot'>
+    <div class='wrap'>
+        <div class='foot-tile'>
+            <div class='foot-cols'>{{footer_column_list}}</div>
+            <div class='foot-line'>{{footer_text}}</div>
+        </div>
+    </div>
+</footer>
+<script src='/js/site.js'></script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js'></script>
+<script>setTimeout(function(){document.querySelectorAll('pre code').forEach(function(el){try{hljs.highlightElement(el);}catch(e){}});},250);</script>
+</body>
+</html>

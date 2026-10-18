@@ -1,0 +1,42 @@
+﻿<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <meta charset='utf-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+    {{head_meta}}
+    <link rel='stylesheet' href='/fonts/fontawesome/css/all.min.css' />
+    <link rel='preconnect' href='https://fonts.googleapis.com'>
+    <link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>
+    <link rel='stylesheet' href='https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Mulish:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap'>
+    <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/base16/woodland.min.css'>
+    <link rel='stylesheet' href='/assets/themes/RiverCove/rivercove.css?v=3' />
+</head>
+<body>
+<a class='skip-link' href='#main'>Skip to content</a>
+<header class='site-header'>
+    <div class='container header-inner'>
+        {{site_logo}}
+        <button class='nav-toggle' onclick='toggleNav()' aria-label='Menu' aria-controls='siteNav'>
+            <i class='fa-solid fa-bars'></i>
+        </button>
+        <nav class='site-nav' id='siteNav'>
+            {{nav_items}}
+        </nav>
+    </div>
+</header>
+<div class='nav-overlay' id='navOverlay' onclick='toggleNav()'></div>
+<main class='site-main' id='main'>
+{{body}}
+</main>
+<footer class='site-footer'>
+    <div class='container footer-cols'>{{footer_column_list}}</div>
+    <div class='container footer-inner'>
+        <div class='footer-meta'>{{footer_text}}</div>
+        <div class='footer-meta'>~ flowing on RiverCove</div>
+    </div>
+</footer>
+<script src='/js/site.js'></script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js'></script>
+<script>setTimeout(function(){document.querySelectorAll('pre code').forEach(function(el){try{hljs.highlightElement(el);}catch(e){}});},250);</script>
+</body>
+</html>

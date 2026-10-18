@@ -1,0 +1,22 @@
+﻿
+<article class='term-doc layout-stack'>
+    <div class='wrap wrap-narrow'>
+        <header class='doc-head'>
+            {{breadcrumbs}}
+            <span class='doc-cmd'>$ cat ./article.md</span>
+            <h1 class='doc-title'>{{article_title}}</h1>
+            <div class='doc-meta-row'>
+                {{published_date}}
+                {{updated_date}}
+                {{article_author}}
+            </div>
+        </header>
+        {{cover_image}}
+        <div class='doc-content prose'>
+            {{article_content}}
+        </div>
+    </div>
+    <div class='wrap wrap-narrow'>
+        {{article_aside}}
+    </div>
+</article>

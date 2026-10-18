@@ -1,0 +1,76 @@
+﻿# Hearth CMS - app-level config (file overrides)
+#
+# To activate: copy or rename this file to "config.txt" in the same folder
+# (/App_Data/config.txt), edit the value, then open /reset_app in your browser
+# to load it without restarting the app.
+#
+# Lines starting with # or ; are comments. Format is key=value.
+#
+# ------------------------------------------------------------------
+# admin_url - the first path segment of the admin panel.
+#
+#   admin_url=admin     ->  panel at /admin/...        (the default)
+#   admin_url=backend   ->  panel at /backend/...
+#   admin_url=manage    ->  panel at /manage/...
+#
+# When this line is present it ALWAYS wins over the value saved in
+# Settings, and the Settings field becomes read-only. This is the
+# recovery hatch: if you forget a custom admin URL, set it here and
+# visit /reset_app.
+#
+# The admin slug root is also the login screen - there is no separate
+# /login page. Visit the slug while signed out to sign in.
+#
+# Allowed: letters, numbers, hyphen, underscore. Reserved words
+# (latest-post, logout, api, category, reset_app, home, ...) are rejected.
+# ------------------------------------------------------------------
+
+admin_url=admin
+
+# ------------------------------------------------------------------
+# dev_mode - developer auto-login (DANGEROUS; off by default).
+#
+#   dev_mode=true    ->  auto-log the first admin on every request
+#   dev_mode=false   ->  require a normal login (the default)
+#
+# Accepted values: true / 1 / on / yes   and   false / 0 / off / no.
+#
+# When dev_mode is ON, the request pipeline signs in the first admin
+# user automatically, so the admin panel AND the API are reachable
+# WITHOUT entering a password. It exists purely as a convenience for
+# local development and automated tooling (e.g. running a content
+# import without managing a login session).
+#
+# Like admin_url, this line ALWAYS wins over the Dev Mode toggle saved
+# in Settings, and is read once at start-up / on /reset_app. While it
+# is present, the Settings toggle becomes informational only.
+#
+# !! SECURITY WARNING !!
+# Never set dev_mode=true on a public or production site. With it on,
+# ANYONE who reaches an admin or API URL is treated as the admin, with
+# no password - a complete bypass of the login wall. Use it only on a
+# local/development machine, and remove the line before exposing the
+# site. The safe default is to leave this line absent (commented out)
+# and keep the Settings toggle off.
+#
+# This line is commented out on purpose - uncomment it only when you
+# understand the warning above, or remove the line entirely.
+# ------------------------------------------------------------------
+
+#dev_mode=false
+
+# ==================================================================
+# Forgotten admin username / password?
+#
+# This is handled by a SEPARATE one-shot file, NOT by config.txt.
+#
+# Create /App_Data/reset_admin.txt with these two lines:
+#
+#   admin_username=youradmin
+#   admin_password=your-new-password
+#
+# Then restart the app, or visit /reset_app. The admin login is reset
+# to those values and the file is automatically consumed (deleted, or
+# blanked if it can't be deleted) so the password never lingers on disk.
+# After signing in you can change the password again in the admin panel.
+# ==================================================================

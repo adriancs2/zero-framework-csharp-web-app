@@ -1,0 +1,21 @@
+﻿# Hearth CMS - admin credential reset (ONE-SHOT)
+#
+# Forgot the admin username or password? This file resets them.
+#
+# 1. Copy or rename this file to "reset_admin.txt" in the same folder
+#    (/App_Data/reset_admin.txt).
+# 2. Set the two values below.
+# 3. Restart the app, or visit /reset_app in your browser.
+#
+# On the next startup (or /reset_app), the admin login is reset to these
+# values and THIS FILE IS AUTOMATICALLY CONSUMED - deleted if possible,
+# otherwise blanked - so the password does not linger on disk. The reset
+# is only applied after the file has been safely neutralised.
+#
+# Requirements: username >= 3 characters, password >= 6 characters.
+# Lines starting with # or ; are comments.
+#
+# After signing in, change the password again from the admin panel.
+
+admin_username=admin
+admin_password=change-me

@@ -1,0 +1,7 @@
+[Theme]
+name = Solarpunk
+description = An optimistic eco-future theme. Living greens, sun-gold and terracotta on a warm cream sky, with organic blob shapes, floating sunlight gradients, leafy motifs and big friendly rounded forms. Hopeful and bright. Quicksand + Nunito Sans + JetBrains Mono.
+author = Hearth CMS
+url = Github Hearth CMS
+version = 1
+date: 2026-06-05

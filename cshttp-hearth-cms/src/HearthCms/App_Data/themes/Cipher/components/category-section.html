@@ -1,0 +1,23 @@
+﻿<section class='cat-block'>
+    <div class='wrap'>
+        <div class='cb-head'>
+            <h2 class='cb-title'><span class='cb-hash'>//</span> {{category_title}}</h2>
+            <a class='cb-all' href='{{category_url}}'>cd ./{{category_title}} <i class='fa-solid fa-arrow-right'></i></a>
+        </div>
+        <div class='cb-grid'>
+            <article class='cb-feature'>
+                <a class='cbf-link' href='{{feature_url}}'>
+                    <div class='cbf-img{{feature_thumb_empty}}'>{{feature_thumb_img}}</div>
+                    <span class='cbf-body'>
+                        <span class='cbf-tag'>FEATURED</span>
+                        <h3 class='cbf-title'>{{feature_title}}</h3>
+                        <p class='cbf-excerpt'>{{feature_excerpt}}</p>
+                        <span class='cbf-meta'>[{{feature_date}}]</span>
+                    </span>
+                </a>
+            </article>
+            <div class='cb-col'>{{column_1_list}}</div>
+            <div class='cb-col'>{{column_2_list}}</div>
+        </div>
+    </div>
+</section>

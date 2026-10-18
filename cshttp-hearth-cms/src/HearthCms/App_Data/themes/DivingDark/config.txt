@@ -1,0 +1,7 @@
+[Theme]
+name = DivingDark
+description = A deep-sea aquatic theme for diving & SUP (dark). Abyssal navy-teal lit by luminous cyan, with a coral-orange highlight — atmospheric and immersive, the descent counterpart to Diving. Outfit + Figtree + JetBrains Mono.
+author = Hearth CMS
+url = Github Hearth CMS
+version = 1
+date: 2026-06-05

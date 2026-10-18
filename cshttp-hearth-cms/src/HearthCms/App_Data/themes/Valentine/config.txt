@@ -1,0 +1,7 @@
+[Theme]
+name = Valentine
+description = A romantic, tender theme leaning softly dark. A deep wine ground so a rose-red hero glows, with blush-pink and rose accents, warm cream text and a whisper of gold. Playfair Display + Karla + JetBrains Mono.
+author = Hearth CMS
+url = Github Hearth CMS
+version = 1
+date: 2026-06-05

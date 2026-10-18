@@ -1,0 +1,20 @@
+﻿<section class='cat-section'>
+    <div class='container'>
+        <div class='cat-head'>
+            <h2>{{category_title}}</h2>
+            <a class='cat-all' href='{{category_url}}'>view all &rarr;</a>
+        </div>
+        <div class='cat-grid'>
+            <article class='cat-feature{{feature_pinned_class}}'>
+                <a class='cat-feature-link' href='{{feature_url}}'>
+                    <div class='cat-feature-img{{feature_thumb_empty}}'>{{feature_thumb_img}}</div>
+                    <h3 class='cat-feature-title'>{{feature_title}}</h3>
+                    <p class='cat-feature-excerpt'>{{feature_excerpt}}</p>
+                    <span class='cat-feature-meta'>{{feature_pinned}}{{feature_date}}</span>
+                </a>
+            </article>
+            <div class='cat-mini'>{{column_1_list}}</div>
+            <div class='cat-mini'>{{column_2_list}}</div>
+        </div>
+    </div>
+</section>

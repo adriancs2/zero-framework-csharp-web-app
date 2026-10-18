@@ -1,0 +1,7 @@
+[Theme]
+name = Almanac
+description = A warm naturalist field-guide theme. Aged almanac paper with faint rule lines, a botanical palette of sage, moss, sepia ink and dusty rose, a characterful serif and floral dividers. Cozy and scholarly. Fraunces + Spectral + JetBrains Mono.
+author = Hearth CMS
+url = Github Hearth CMS
+version = 1
+date: 2026-06-05

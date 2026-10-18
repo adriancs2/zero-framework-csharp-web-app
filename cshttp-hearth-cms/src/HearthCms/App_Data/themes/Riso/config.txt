@@ -1,0 +1,7 @@
+[Theme]
+name = Riso
+description = A Risograph zine theme. Two flat spot inks (fluoro pink + electric blue) that overprint into purple where they overlap, with paper grain, slight misregistration, chunky grotesque type and an asymmetric cut-paper layout. Loud, analog, printed. Archivo + Space Mono.
+author = Hearth CMS
+url = Github Hearth CMS
+version = 1
+date: 2026-06-05

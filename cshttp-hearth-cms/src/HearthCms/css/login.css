@@ -1,0 +1,381 @@
+﻿/* Login screen - sits on top of site.css */
+.page-login {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    background:
+        radial-gradient(circle at 20% 10%, #e0e7ff 0%, transparent 40%),
+        radial-gradient(circle at 80% 90%, #fef3c7 0%, transparent 45%),
+        #fafafa;
+    padding: 24px;
+}
+.login-shell { width: 100%; max-width: 420px; }
+.login-card {
+    background: #ffffff;
+    border: 1px solid #e5e5e5;
+    border-radius: 18px;
+    padding: 36px 32px;
+    box-shadow: 0 30px 80px -20px rgba(0,0,0,.16), 0 1px 2px rgba(0,0,0,.04);
+}
+.login-brand {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-weight: 700; font-size: 15px;
+    margin-bottom: 24px;
+    color: #18181b;
+}
+.login-brand i { color: #2563eb; font-size: 16px; }
+.login-title {
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0 0 8px;
+    letter-spacing: -0.025em;
+    color: #18181b;
+}
+.login-sub { color: #525252; font-size: 15px; margin: 0 0 26px; }
+.login-flash {
+    background: #f5f5f4;
+    color: #525252;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    margin-bottom: 18px;
+}
+.login-error {
+    background: #fef2f2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    margin-bottom: 14px;
+}
+.login-meta { text-align: center; font-size: 13px; margin: 22px 0 0; }
+.login-meta a { color: #525252; }
+.login-meta a:hover { color: #18181b; }
+
+.login-card .form-field { margin-bottom: 14px; }
+.login-card label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 6px;
+    color: #18181b;
+}
+.login-card input[type=text],
+.login-card input[type=password] {
+    width: 100%;
+    padding: 12px 14px;
+    font-size: 14.5px;
+    border: 1px solid #d4d4d4;
+    border-radius: 8px;
+    background: #fff;
+    font-family: inherit;
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
+.login-card input:focus {
+    outline: none;
+    border-color: #18181b;
+    box-shadow: 0 0 0 3px rgba(0,0,0,.06);
+}
+.login-card .btn-primary { height: 46px; margin-top: 8px; }
+
+
+.login-card .form-field-inline { display: flex; align-items: center; }
+.login-card .remember-label { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: #525252; cursor: pointer; user-select: none; }
+.login-card .remember-label input[type=checkbox] { width: 16px; height: 16px; margin: 0; accent-color: #18181b; cursor: pointer; }
+
+/* Social Login & Simulated OAuth Modal */
+.social-login-separator {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    color: #71717a;
+    font-size: 12px;
+    margin: 20px 0;
+}
+.social-login-separator::before,
+.social-login-separator::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid #e4e4e7;
+}
+.social-login-separator:not(:empty)::before {
+    margin-right: .75em;
+}
+.social-login-separator:not(:empty)::after {
+    margin-left: .75em;
+}
+
+.social-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.btn-social {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 40px;
+    border: 1px solid #e4e4e7;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #18181b;
+    font-size: 13.5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color .15s ease, border-color .15s ease, transform .1s ease;
+}
+.btn-social:hover {
+    background-color: #f4f4f5;
+    border-color: #d4d4d8;
+}
+.btn-social:active {
+    transform: scale(0.98);
+}
+.btn-social i {
+    font-size: 14px;
+}
+.btn-social.google i { color: #ea4335; }
+.btn-social.apple i { color: #000000; }
+.btn-social.github i { color: #24292e; }
+.btn-social.microsoft i { color: #0078d4; }
+
+/* OAuth Simulator Styles */
+.page-oauth-simulator {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    transition: background-color 0.3s ease;
+}
+
+/* Default Theme */
+.page-oauth-simulator.theme-google {
+    background: #f0f4f9;
+}
+.page-oauth-simulator.theme-apple {
+    background: #f5f5f7;
+}
+.page-oauth-simulator.theme-github {
+    background: #0d1117;
+    color: #c9d1d9;
+}
+.page-oauth-simulator.theme-microsoft {
+    background: #f2f2f2;
+}
+
+.oauth-shell {
+    width: 100%;
+    max-width: 440px;
+}
+
+.oauth-card {
+    background: #ffffff;
+    border: 1px solid #e4e4e7;
+    border-radius: 18px;
+    padding: 40px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.02);
+    transition: all 0.3s ease;
+}
+
+/* GitHub Card Overrides (Dark Mode) */
+.theme-github .oauth-card {
+    background: #161b22;
+    border-color: #30363d;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+}
+
+.oauth-brand-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.oauth-logo-wrap {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #f4f4f5;
+    font-size: 24px;
+    margin-bottom: 16px;
+}
+.theme-google .oauth-logo-wrap { color: #4285F4; background: #e8f0fe; }
+.theme-apple .oauth-logo-wrap { color: #000000; background: #f5f5f7; }
+.theme-github .oauth-logo-wrap { color: #ffffff; background: #21262d; border: 1px solid #30363d; }
+.theme-microsoft .oauth-logo-wrap { color: #0078d4; background: #e6f2fc; }
+
+.oauth-title {
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0 0 6px;
+    letter-spacing: -0.02em;
+    color: #18181b;
+}
+.theme-github .oauth-title { color: #f0f6fc; }
+
+.oauth-sub {
+    font-size: 14.5px;
+    color: #71717a;
+    margin: 0;
+}
+.theme-github .oauth-sub { color: #8b949e; }
+
+.oauth-account-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 10px;
+    border: 1px solid #e4e4e7;
+    border-radius: 12px;
+    overflow: hidden;
+}
+.theme-github .oauth-account-list {
+    border-color: #30363d;
+}
+
+.oauth-account-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
+    cursor: pointer;
+    background: #ffffff;
+    border-bottom: 1px solid #f4f4f5;
+    transition: background-color 0.15s ease;
+}
+.oauth-account-item:last-child {
+    border-bottom: none;
+}
+.oauth-account-item:hover {
+    background-color: #fafafa;
+}
+
+.theme-github .oauth-account-item {
+    background: #161b22;
+    border-bottom-color: #21262d;
+}
+.theme-github .oauth-account-item:hover {
+    background-color: #1f242c;
+}
+
+.oauth-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #e0e7ff;
+    color: #4f46e5;
+    font-size: 15px;
+    font-weight: 600;
+}
+.theme-github .oauth-avatar {
+    background: #388bfd;
+    color: #ffffff;
+}
+
+.oauth-account-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.oauth-account-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #18181b;
+}
+.theme-github .oauth-account-name { color: #c9d1d9; }
+
+.oauth-account-email {
+    font-size: 12.5px;
+    color: #71717a;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+.theme-github .oauth-account-email { color: #8b949e; }
+
+.oauth-account-chevron {
+    font-size: 12px;
+    color: #a1a1aa;
+}
+.theme-github .oauth-account-chevron { color: #484f58; }
+
+.oauth-btn-another {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    padding: 14px 18px;
+    border: 1px dashed #e4e4e7;
+    border-radius: 12px;
+    background: transparent;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    color: #52525b;
+    text-align: left;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.oauth-btn-another:hover {
+    background-color: #fafafa;
+    border-color: #d4d4d8;
+}
+
+.theme-github .oauth-btn-another {
+    border-color: #30363d;
+    color: #c9d1d9;
+}
+.theme-github .oauth-btn-another:hover {
+    background-color: #1f242c;
+    border-color: #8b949e;
+}
+
+.oauth-avatar-plus {
+    background: #f4f4f5;
+    color: #71717a;
+}
+.theme-github .oauth-avatar-plus {
+    background: #21262d;
+    color: #8b949e;
+}
+
+.another-account-wrap {
+    animation: modalSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.theme-github .another-account-wrap label {
+    color: #c9d1d9;
+}
+.theme-github .another-account-wrap input {
+    background: #0d1117;
+    border-color: #30363d;
+    color: #c9d1d9;
+}
+.theme-github .another-account-wrap input:focus {
+    border-color: #58a6ff;
+    box-shadow: 0 0 0 3px rgba(56,139,253,0.15);
+}
+
+.another-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 20px;
+}
+
+.oauth-footer {
+    text-align: center;
+    margin-top: 30px;
+}
+
+.oauth-footer-text {
+    font-size: 12px;
+    color: #a1a1aa;
+}
+.theme-github .oauth-footer-text { color: #484f58; }

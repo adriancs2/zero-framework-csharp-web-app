@@ -1,0 +1,6 @@
+﻿Timestamp : 2026-06-28 12:02:33
+DB Version: 2
+Result    : SUCCESS
+
+SQL:
+ALTER TABLE user_sessions ADD COLUMN rotated_unix INTEGER NOT NULL DEFAULT 0;

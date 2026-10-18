@@ -1,0 +1,1296 @@
+﻿# Complete Architecture Reference for Pageless ASP.NET Web Forms in MD (Markdown) Format
+
+## Overview
+
+This project uses a **Pageless Architecture** - rendering full HTML pages entirely in C# using `StringBuilder` and `Response.Write`, intercepted at the `Global.asax.cs` pipeline. No `.aspx` markup files, no master pages, no ViewState, no server controls, no page lifecycle.
+
+Every HTTP request flows through `Global.asax.cs`, where a `switch` statement routes the path to a static handler method. The handler builds the complete HTML document - from `<!DOCTYPE html>` to `</html>` - as a C# string and writes it directly to the response stream.
+
+---
+
+## HTTP Errors Pass-Through
+
+Pageless Architecture handles all requests through `Global.asax.cs` rather than physical `.aspx` files. By default, IIS intercepts responses with error status codes (404, 403, 500, etc.) and replaces them with its own error pages - overriding whatever your handler produced.
+
+To prevent this, add the following to `web.config`:
+
+```xml
+<system.webServer>
+    <httpErrors existingResponse="PassThrough" />
+</system.webServer>
+```
+
+This tells IIS to leave the application's response untouched, allowing code behind handler to remain the single source of truth for all output - including error pages.
+
+---
+
+## Core Principle: NO Traditional WebForms Patterns
+
+| ❌ AVOID | ✅ USE INSTEAD |
+|----------|----------------|
+| `.aspx` markup files | C# string-based HTML rendering |
+| Master pages (`.master`) | `PageTemplate` class (C#) |
+| `<asp:Button>`, `<asp:TextBox>` | Plain HTML: `<button>`, `<input>` |
+| `OnClick="btnSave_Click"` | `onclick="saveItem()"` (JS function) |
+| ViewState | Client-side state, re-fetch from API |
+| Postback / `IsPostBack` | Fetch API calls |
+| `UpdatePanel` / AJAX Toolkit | Native `fetch()` |
+| Code-behind event handlers | API endpoint actions |
+| Page lifecycle (`Page_Load`, etc.) | Pipeline interception at `Global.asax.cs` |
+
+### ⚠️ CRITICAL: Button Type Declaration
+
+```html
+<!-- Triggers postback (default type="submit") -->
+<button onclick="saveItem()">Save</button>
+
+<!-- Executes JavaScript only, no postback -->
+<button type="button" onclick="saveItem()">Save</button>
+```
+
+---
+
+## Default JSON Library
+
+Newtonsoft.JSON
+
+```csharp
+using Newtonsoft.Json;
+
+Response.ContentType = "application/json";
+Response.Write(JsonConvert.SerializeObject(obj));
+```
+
+JSON naming convention: direct matching of C# class fields or properties. Use default standard.
+It can be PascalCase (`PropertyName`).
+
+If the fields are primarily matching MySQL columns, use snake_case (`property_name`).
+
+Never use CamelCase (`propertyName`).
+
+---
+
+## Data Model Class Convention
+
+Database model classes are prefixed with `ob` (object). The preferred pattern uses **private fields** in snake_case (matching MySQL column names) with **public properties** in PascalCase (matching C# conventions):
+
+```csharp
+public class obBook
+{
+    int id = 0;
+    string title = "";
+    string author = "";
+    int year = 0;
+    DateTime date_created = DateTime.MinValue;
+    DateTime date_modified = DateTime.MinValue;
+
+    public int Id { get { return id; } set { id = value; } }
+    public string Title { get { return title; } set { title = value; } }
+    public string Author { get { return author; } set { author = value; } }
+    public int Year { get { return year; } set { year = value; } }
+    public DateTime DateCreated { get { return date_created; } set { date_created = value; } }
+    public DateTime DateModified { get { return date_modified; } set { date_modified = value; } }
+}
+```
+
+`MySqlExpress` maps MySQL columns to the private fields by matching snake_case names - no attribute mapping or naming configuration needed. C# code accesses the data through PascalCase public properties. Both layers work automatically with the same class.
+
+---
+
+## Pipeline Interception - Where Pageless Rendering Begins
+
+In Pageless Architecture, every request is intercepted in `Application_BeginRequest` and routed by a single `switch` statement. The built-in ASP.NET session module is bypassed entirely - session state is provided by a custom in-process store (see [Custom Session State](#custom-session-state) below) which is available immediately at `BeginRequest`, so there is no need to wait for `AcquireRequestState` or `PostAcquireRequestState`.
+
+| Entry Point | Role |
+|-------------|------|
+| `Application_Start` | One-time init: connection string, DB migration, start `SessionSweeper` background task |
+| `Application_BeginRequest` | The single routing point. Custom session is restored here via `AppSession.TryRestoreFromCookie()` before the route switch dispatches to a handler |
+
+### Routing - Global.asax.cs
+
+All routes are defined as a `switch` statement. This is the routing table for the entire application:
+
+```csharp
+public class Global : System.Web.HttpApplication
+{
+    protected void Application_BeginRequest(object sender, EventArgs e)
+    {
+        string path = Request.Path.ToLower().Trim().TrimEnd('/');
+
+        switch (path)
+        {
+            case "/":
+            case "/home":
+                RH.HomePage.HandleRequest();
+                return;
+            case "/api-health":
+                RH.HealthApi.HandleRequest();
+                return;
+            case "/about":
+                RH.AboutPage.HandleRequest();
+                return;
+            case "/books":
+                RH.BookPage.HandleRequest();
+                return;
+            case "/bookapi":
+                RH.BookPageApi.HandleRequest();
+                return;
+        }
+    }
+}
+```
+
+Two routes per feature - one page, one API. Add more `case` entries as you add features. No route configuration files, no attribute routing - you look at the `switch` statement and see every URL the application responds to.
+
+---
+
+## Custom Session State
+
+The built-in ASP.NET `SessionStateModule` is **disabled**. All session state is held in a single application-wide `public static ConcurrentDictionary` keyed by a random session id stored in an `ssid` cookie. This makes session data available the instant a request enters `Application_BeginRequest`. IIS/ASP.NET built-in Session State infrastructure is not reliable in pageless mode, do not wait  for `AcquireRequestState`, no `EnableSessionState="true"` on handlers, no `IRequiresSessionState` marker interface.
+
+### Why custom
+
+| Built-in ASP.NET Session | Custom `SessionStore` |
+|---|---|
+| Locked behind `AcquireRequestState` - forces routing into `PostAcquireRequestState` | Available at `BeginRequest` - single routing point |
+| Per-request reader/writer lock serializes async handlers | Lock-free `ConcurrentDictionary` |
+| Hard to inspect, debug, or sweep | Plain dictionary - enumerable, sweepable, easy to log |
+| Tied to InProc / StateServer / SQL provider | Trivially swappable for any backing store |
+
+### Three-layer model
+
+Session lives in three places, in order of speed:
+
+```
+  cookies (ssid + lsid)  ──►  ConcurrentDictionary (RAM)  ──►  login_sessions table (DB)
+       ▲                              ▲                              │
+       └──────────────────────────────┴──────────────────────────────┘
+                          rehydrate on cookie hit
+```
+
+1. **`ssid` cookie** - a random 48-char id, the lookup key into the in-memory dictionary. Lifespan: in-memory only (lost on app-pool recycle).
+2. **`SessionStore.Sessions`** - `public static ConcurrentDictionary<string, StateObject>`. Each `StateObject` wraps another `ConcurrentDictionary<string, object>` for arbitrary per-user data plus a `LastAccessUtc` timestamp.
+3. **`login_sessions` DB table** - persistent "Remember Me" record holding `(user_id, token, date_expiry, cookie_persistent)`. Referenced by an `lsid` cookie. Survives app restarts.
+
+### Activation - first request
+
+```csharp
+// SessionStore.Current - called transparently on first read/write
+public static StateObject Current
+{
+    get
+    {
+        HttpContext ctx = HttpContext.Current;
+        string sid = ctx.Request.Cookies[CookieName]?.Value;
+
+        StateObject state;
+        if (string.IsNullOrEmpty(sid) || !Sessions.TryGetValue(sid, out state))
+        {
+            sid   = NewId();                 // 48-char random hex
+            state = new StateObject();
+            Sessions[sid] = state;            // <-- ConcurrentDictionary
+
+            ctx.Response.Cookies.Set(new HttpCookie(CookieName, sid)
+            {
+                HttpOnly = true,
+                Secure   = ctx.Request.IsSecureConnection,
+                SameSite = SameSiteMode.Lax
+            });
+        }
+        state.LastAccessUtc = DateTime.UtcNow;
+        return state;
+    }
+}
+```
+
+### Resuming session - DB → ConcurrentDictionary → cookie
+
+When the in-memory entry is gone (app-pool recycle, idle sweep, cold machine) but the user still holds a valid `lsid` cookie, the next request walks back up the chain:
+
+```csharp
+// Called once per request from Application_BeginRequest
+public static void TryRestoreFromCookie()
+{
+    if (IsLoggedIn) return;                   // already in ConcurrentDictionary
+
+    obUser user = UserSession.TryRestoreFromCookie();   // ── reads "lsid" cookie
+                                                        // ── SELECT … FROM login_sessions
+                                                        //    JOIN users WHERE token=@t AND not expired
+    if (user != null)
+        LoginUser = user;                     // ── writes user back into StateObject
+                                              //    (lives in the ConcurrentDictionary)
+}
+```
+
+Flow: **`lsid` cookie → DB lookup → `obUser` materialized → stored into the per-session `StateObject` inside the `ConcurrentDictionary` → subsequent requests in the same app-pool lifetime hit RAM directly.** The cookie's expiry is rolled forward only when remaining lifetime drops below 1/12 of the original window, keeping DB writes infrequent.
+
+### Accessing session from handlers
+
+`AppSession` is a thin static facade - handlers never touch `HttpContext.Session`:
+
+```csharp
+public static class AppSession
+{
+    public static obUser LoginUser
+    {
+        get { return SessionStore.Current?[AppSessionKeys.LoginUser] as obUser; }
+        set { var s = SessionStore.Current; if (s != null) s[AppSessionKeys.LoginUser] = value; }
+    }
+    public static bool IsLoggedIn => LoginUser != null;
+}
+```
+
+Inside any page or API handler:
+
+```csharp
+if (!AppSession.IsLoggedIn) { Response.Redirect("/login"); return; }
+obUser me = AppSession.LoginUser;
+```
+
+### Lifecycle
+
+- **Logout** - `SessionStore.Abandon()` removes the entry from the dictionary and expires the `ssid` cookie; `UserSession.DeletePersistentSession()` deletes the `login_sessions` row and expires the `lsid` cookie.
+- **Idle cleanup** - `SessionSweeper` runs hourly via `HostingEnvironment.QueueBackgroundWorkItem`, dropping `StateObject` entries idle for more than two hours and deleting expired `login_sessions` rows. Sweeping the dictionary is just a `foreach` over `KeyValuePair`s - no special API needed.
+- **App-pool recycle** - the dictionary is gone, but any user with a live `lsid` cookie is transparently restored on their next request.
+
+### Web.config - disable built-in session module
+
+```xml
+<system.web>
+    <sessionState mode="Off" />
+</system.web>
+```
+
+This removes the per-request `AcquireRequestState` lock entirely, which is what makes single-point routing in `BeginRequest` clean.
+
+---
+
+## The Two-Handler Pattern
+
+Every feature follows this pattern:
+
+| Handler | Purpose | Returns |
+|---------|---------|---------|
+| **Page Handler** (`BookPage`) | Renders the full HTML page | `text/html` - complete document |
+| **API Handler** (`BookApi`) | Processes Fetch API calls | `application/json` or `text/html` fragment |
+
+One page, one API. That's the entire architecture for any feature.
+
+---
+
+## File Structure Pattern
+
+Since there are no `.aspx` files, all code lives in `.cs` class files:
+
+```
+/Global.asax.cs             ← routing table
+
+/engine/
+    config.cs               ← connection string, app settings
+    ApiHelper.cs            ← shared response helpers
+    PageTemplate.cs         ← shared HTML template (replaces master page)
+
+/engine/
+/engine/ob
+/engine/Models
+    obBook.cs               ← data model
+
+/engine/RH/
+    HomePage.cs             ← page handler
+    AboutPage.cs            ← page handler
+    BookPage.cs             ← page handler
+    BookPageApi.cs          ← API handler
+
+/css/
+    site.css
+
+/js/
+    site.js
+    books.js
+```
+
+---
+
+## ApiHelper - Shared Response Utilities
+
+Every handler uses `ApiHelper` for response writing and termination:
+
+```csharp
+using Newtonsoft.Json;
+using System;
+using System.Web;
+
+namespace System
+{
+    public static class ApiHelper
+    {
+        static HttpRequest Request
+        {
+            get
+            {
+                if (HttpContext.Current == null)
+                    throw new InvalidOperationException("ApiHelper called outside of an HTTP request context.");
+                return HttpContext.Current.Request;
+            }
+        }
+
+        static HttpResponse Response
+        {
+            get
+            {
+                if (HttpContext.Current == null)
+                    throw new InvalidOperationException("ApiHelper called outside of an HTTP request context.");
+                return HttpContext.Current.Response;
+            }
+        }
+
+        public static string GetBaseUrl()
+        {
+            Uri url = Request.Url;
+            return $"{url.Scheme}://{url.Host}{(url.IsDefaultPort ? "" : ":" + url.Port)}";
+        }
+
+        public static void EndResponse()
+        {
+            // So IIS will skip handling custom errors
+            Response.TrySkipIisCustomErrors = true;
+
+            try
+            {
+                Response.Flush();
+            }
+            catch { /* client already disconnected - ignore */ }
+
+            Response.SuppressContent = true;
+
+            // The most reliable way in WebForms / IIS-integrated pipeline
+            HttpContext.Current.ApplicationInstance.CompleteRequest();
+        }
+
+        public static void WriteJson(object obj)
+        {
+            Response.ContentType = "application/json";
+            Response.Write(JsonConvert.SerializeObject(obj));
+        }
+
+        public static void WriteSuccess(string message = "Success")
+        {
+            WriteJson(new { success = true, message });
+        }
+
+        public static void WriteError(string message, int statusCode = 400)
+        {
+            Response.StatusCode = statusCode;
+            WriteJson(new { success = false, message });
+        }
+    }
+}
+```
+
+`EndResponse()` is the Pageless equivalent of `Response.End()` - but without the `ThreadAbortException`. It flushes buffered content, prevents additional output, and tells ASP.NET to skip to `EndRequest` cleanup.
+
+---
+
+## PageTemplate - Replaces the Master Page
+
+The `PageTemplate` class generates the shared HTML shell - `<head>`, navigation, footer, scripts - that wraps every page. It serves the same role as a `.master` file, but as a plain C# class.
+
+```csharp
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Web;
+
+namespace System.engine
+{
+    public class PageTemplate
+    {
+        // --- Page Meta / SEO ---
+
+        string _title = "";
+
+        public string Title
+        {
+            get
+            {
+                if (!_title.Contains("My Website"))
+                {
+                    return _title + " - My Website";
+                }
+                return _title;
+            }
+            set
+            {
+                _title = value;
+            }
+        }
+
+        public string Description = "Welcome to My Website.";
+        public string FaviconIco = "/favicon.ico";
+        public string Favicon32 = "/media/favicon-32x32.png";
+        public string Favicon16 = "/media/favicon-16x16.png";
+        public string AppleTouchIcon = "/media/favicon-180x180.png";
+        public string Manifest = "/media/site.webmanifest";
+        public string MsAppTileColor = "#E0F3EF";
+        public string MsAppTileImage = "/media/favicon-150x150.png";
+        public string ThemeColor = "#E0F3EF";
+        public string OgType = "website";
+        public string OgUrl = "https://mywebsite.com";
+        public string OgImage = "https://mywebsite.com/media/og-image.png";
+        public int OgImageWidth = 1200;
+        public int OgImageHeight = 630;
+        public string TwitterCard = "summary_large_image";
+
+        // --- Extra Raw HTML ---
+
+        public string ExtraHeaderText = "";
+        public string ExtraFooterText = "";
+
+        // ==============================
+        // GenerateHtmlHeader
+        // ==============================
+
+        public string GenerateHtmlHeader()
+        {
+            string encodedTitle = HttpUtility.HtmlEncode(Title);
+            string encodedDesc = HttpUtility.HtmlEncode(Description);
+
+            StringBuilder sb = new StringBuilder();
+
+            sb.Append($@"<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+    <title>{encodedTitle}</title>
+    <meta name='description' content='{encodedDesc}'>
+
+    <!-- Favicon -->
+    <link rel='icon' href='{FaviconIco}' sizes='48x48'>
+    <link rel='icon' type='image/png' sizes='32x32' href='{Favicon32}'>
+    <link rel='icon' type='image/png' sizes='16x16' href='{Favicon16}'>
+    <link rel='apple-touch-icon' sizes='180x180' href='{AppleTouchIcon}'>
+    <link rel='manifest' href='{Manifest}'>
+    <meta name='msapplication-TileColor' content='{MsAppTileColor}'>
+    <meta name='msapplication-TileImage' content='{MsAppTileImage}'>
+    <meta name='theme-color' content='{ThemeColor}'>
+
+    <!-- Open Graph / Facebook -->
+    <meta property='og:type' content='{OgType}'>
+    <meta property='og:url' content='{OgUrl}'>
+    <meta property='og:title' content='{encodedTitle}'>
+    <meta property='og:description' content='{encodedDesc}'>
+    <meta property='og:image' content='{OgImage}'>
+    <meta property='og:image:width' content='{OgImageWidth}'>
+    <meta property='og:image:height' content='{OgImageHeight}'>
+
+    <!-- Twitter -->
+    <meta name='twitter:card' content='{TwitterCard}'>
+    <meta name='twitter:url' content='{OgUrl}'>
+    <meta name='twitter:title' content='{encodedTitle}'>
+    <meta name='twitter:description' content='{encodedDesc}'>
+    <meta name='twitter:image' content='{OgImage}'>
+
+    <link rel='stylesheet' href='/css/site.css' />
+");
+
+            // Extra header text (raw HTML)
+            if (ExtraHeaderText.Length > 0)
+            {
+                sb.AppendLine(ExtraHeaderText);
+            }
+
+            sb.Append(@"</head>
+<body>
+");
+
+            // --- Navigation Bar ---
+            sb.Append(RenderNavbar());
+
+            // --- Open Main Content Container ---
+            sb.Append(@"    <main class='site-main'>
+");
+
+            return sb.ToString();
+        }
+
+        // ==============================
+        // GenerateHtmlFooter
+        // ==============================
+
+        public string GenerateHtmlFooter()
+        {
+            StringBuilder sb = new StringBuilder();
+
+            sb.Append($@"
+    </main>
+
+    <footer class='site-footer'>
+        <div class='footer-inner'>
+            <p>&copy; {DateTime.Now.Year} My Website</p>
+            <p>
+                <a href='/about'>About</a> - 
+                <a href='/contact'>Contact</a>
+            </p>
+        </div>
+    </footer>
+
+    <script src='/js/site.js'></script>
+");
+
+            // Extra footer text (raw HTML)
+            if (ExtraFooterText.Length > 0)
+            {
+                sb.AppendLine(ExtraFooterText);
+            }
+
+            sb.Append(@"
+</body>
+</html>");
+
+            return sb.ToString();
+        }
+
+        // ==============================
+        // Navigation Bar
+        // ==============================
+
+        string RenderNavbar()
+        {
+            StringBuilder sb = new StringBuilder();
+
+            sb.Append(@"    <header class='site-header'>
+        <div class='header-inner'>
+            <a href='/' class='site-logo'>
+                <img src='/media/logo-40x40.png' />
+            </a>
+            <a href='/' class='site-logo'>My Website</a>
+            <button class='nav-toggle' onclick='toggleNav()' aria-label='Menu'>
+                <span></span><span></span><span></span>
+            </button>
+            <nav class='site-nav' id='siteNav'>
+                <a href='/'>Home</a>
+                <a href='/about'>About</a>
+                <a href='/contact'>Contact</a>
+");
+
+            // Session-aware content - read from custom AppSession (not HttpContext.Session)
+            if (AppSession.IsLoggedIn)
+            {
+                string username = AppSession.LoginUser.Username;
+                sb.Append($"                <a href='/u/{HttpUtility.HtmlAttributeEncode(username)}'>Profile</a>\n");
+                sb.Append("                <a href='/logout'>Logout</a>\n");
+            }
+            else
+            {
+                sb.Append("                <a href='/login'>Login</a>\n");
+                sb.Append("                <a href='/register'>Register</a>\n");
+            }
+
+            sb.Append(@"            </nav>
+        </div>
+    </header>
+    <div class='nav-overlay' id='navOverlay' onclick='toggleNav()'></div>
+
+");
+
+            return sb.ToString();
+        }
+    }
+}
+```
+
+### Using PageTemplate in a Page Handler
+
+Every page handler follows the same pattern - configure metadata, render begin, append page content, render end:
+
+```csharp
+public class HomePage
+{
+    public static void HandleRequest()
+    {
+        HttpResponse Response = HttpContext.Current.Response;
+        StringBuilder sb = new StringBuilder();
+
+        PageTemplate pt = new PageTemplate()
+        {
+            Title = "Home",
+            Description = "Welcome to our website."
+        };
+
+        // Shared header + navbar + container open
+        sb.Append(pt.GenerateHtmlHeader());
+
+        // --- Page-specific content ---
+        sb.Append("<h1>Welcome</h1>");
+        sb.Append("<p>Browse our latest content below.</p>");
+        // --- End page-specific content ---
+
+        // Shared footer + scripts + close
+        sb.Append(pt.GenerateHtmlFooter());
+
+        Response.ContentType = "text/html; charset=utf-8";
+        Response.Write(sb.ToString());
+        ApiHelper.EndResponse();
+    }
+}
+```
+
+### Adding Page-Specific CSS and JavaScript
+
+Use `lstTopCss`, `lstTopScript`, and `lstBottomScript` to inject page-specific resources:
+
+```csharp
+PageTemplate pt = new PageTemplate()
+{
+    Title = "Book Catalog",
+    Description = "Browse our collection of books."
+};
+
+string extraHeaderText = @"
+<link href='/css/books.css' rel='stylesheet'>
+<script src='/js/books.js'></script>
+";
+
+pt.ExtraHeaderText = extraHeaderText;
+
+sb.Append(pt.GenerateHtmlHeader());
+
+// ... page content ...
+sb.Append("....");
+
+sb.Append(pt.GenerateHtmlFooter());
+```
+
+### Equivalence to Master Page
+
+| Master Page Concept | Pageless Equivalent |
+|---------------------|---------------------|
+| `.master` file | `PageTemplate` class |
+| `<head>` section | `GenerateHtmlHeader()` |
+| Navigation bar | `RenderNavbar()` |
+| `<asp:ContentPlaceHolder>` | Gap between `GenerateHtmlHeader()` and `GenerateHtmlFooter()` |
+| Footer + closing tags | `GenerateHtmlFooter()` |
+| `ContentPlaceHolder` for head | `lstTopCss`, `lstTopScript`, `ExtraHeaderText` |
+
+---
+
+## Frontend Pattern - Fetch API
+
+### Data Loading (GET)
+
+```javascript
+const API_URL = '/bookapi';
+
+const response = await fetch(`${API_URL}?action=get_list&id=${id}`);
+const data = await response.json();
+if (data.success) {
+    // Render data.items to DOM
+}
+```
+
+### Data Saving (POST with FormData)
+
+```javascript
+async function saveBook() {
+    var title = document.getElementById('book-title').value.trim();
+    var author = document.getElementById('book-author').value.trim();
+
+    var formData = new FormData();
+    formData.append('action', 'save-book');
+    formData.append('title', title);
+    formData.append('author', author);
+
+    try {
+        var response = await fetch(API_URL, {
+            method: 'POST',
+            // Important: Do NOT set Content-Type header when using FormData
+            // The browser will automatically set it to multipart/form-data with correct boundary
+            body: formData
+        });
+
+        if (!response.ok) {
+            throw new Error('Server responded with an error status');
+        }
+
+        var data = await response.json();
+
+        if (data.success) {
+            alert(data.message);
+        } else {
+            alert(data.message);
+        }
+    } catch (error) {
+        console.error('Fetch error:', error);
+    }
+}
+```
+
+### File Upload (XMLHttpRequest with Progress)
+
+```javascript
+async function uploadFile() {
+    var fileInput = document.getElementById('fileUpload');
+    if (!fileInput.files.length) return;
+
+    var formData = new FormData();
+    formData.append('action', 'upload');
+    formData.append('file', fileInput.files[0]);
+
+    // Use XMLHttpRequest for progress tracking
+    var xhr = new XMLHttpRequest();
+
+    xhr.upload.onprogress = function (e) {
+        if (e.lengthComputable) {
+            var pct = Math.round((e.loaded / e.total) * 100);
+            document.getElementById('progress').textContent = pct + '%';
+        }
+    };
+
+    xhr.onload = function () {
+        var data = JSON.parse(xhr.responseText);
+        if (data.success) alert('Uploaded');
+        else alert(data.message);
+    };
+
+    xhr.open('POST', API_URL);
+    xhr.send(formData);
+}
+```
+
+### HTML Escaping in JavaScript
+
+```javascript
+function escapeHtml(text) {
+    var div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+```
+
+---
+
+## Backend API Pattern
+
+### API Handler Structure
+
+```csharp
+public class BookPageApi
+{
+    public static void HandleRequest()
+    {
+        var Request = HttpContext.Current.Request;
+        string action = (Request["action"] + "").ToLower().Trim();
+
+        try
+        {
+            switch (action)
+            {
+                case "get-books-html":  GetBooksHtml();  break;
+                case "get-books-json":  GetBooksJson();  break;
+                case "get-book":        GetBook();       break;
+                case "save-book":       SaveBook();      break;
+                case "delete-book":     DeleteBook();    break;
+                default: ApiHelper.WriteError($"Unknown action: {action}", 400); break;
+            }
+        }
+        catch (Exception ex)
+        {
+            ApiHelper.WriteError(ex.Message, 500);
+        }
+
+        ApiHelper.EndResponse();
+    }
+}
+```
+
+### READ - Return HTML Fragment
+
+The server pre-renders HTML. The frontend dumps it into a container with `innerHTML`:
+
+**Backend:**
+```csharp
+static void GetBooksHtml()
+{
+    HttpResponse Response = HttpContext.Current.Response;
+    StringBuilder sb = new StringBuilder();
+
+    List<obBook> lstBook = GetBooksFromDatabase();
+
+    foreach (var b in lstBook)
+    {
+        sb.Append($@"
+<div class='card-book'>
+    <strong>{HttpUtility.HtmlEncode(b.Title)}</strong><br>
+    Author: {HttpUtility.HtmlEncode(b.Author)}<br>
+    Year: {b.Year}<br>
+    <button type='button' onclick='editBook({b.Id})'>Edit</button>
+    <button type='button' onclick='deleteBook({b.Id})'>Delete</button>
+</div>");
+    }
+
+    Response.ContentType = "text/html; charset=utf-8";
+    Response.Write(sb.ToString());
+}
+```
+
+**Frontend:**
+```javascript
+async function getAllBooksHtml() {
+    var formData = new FormData();
+    formData.append('action', 'get-books-html');
+
+    try {
+        var response = await fetch(API_URL, {
+            method: 'POST',
+            body: formData
+        });
+
+        var html = await response.text();
+        document.getElementById('div-my-books').innerHTML = html;
+    } catch (e) {
+        alert('Failed to load books');
+    }
+}
+```
+
+### READ - Return JSON
+
+The server returns data. The frontend renders it in JavaScript:
+
+**Backend:**
+```csharp
+static void GetBooksJson()
+{
+    List<obBook> lstBook = GetBooksFromDatabase();
+
+    ApiHelper.WriteJson(new
+    {
+        success = true,
+        message = "Success",
+        books = lstBook
+    });
+}
+```
+
+**Frontend:**
+```javascript
+async function getAllBooksJson() {
+    var formData = new FormData();
+    formData.append('action', 'get-books-json');
+
+    try {
+        var response = await fetch(API_URL, {
+            method: 'POST',
+            body: formData
+        });
+
+        var data = await response.json();
+
+        if (!data.success) {
+            alert(data.message);
+            return;
+        }
+
+        var blocks = [];
+
+        for (var i = 0; i < data.books.length; i++) {
+            var b = data.books[i];
+            blocks.push(
+                "<div class='card-book'>" +
+                "<strong>" + escapeHtml(b.Title) + "</strong><br>" +
+                "Author: " + escapeHtml(b.Author) + "<br>" +
+                "Year: " + b.Year + "<br>" +
+                "<button type='button' onclick='editBook(" + b.Id + ")'>Edit</button> " +
+                "<button type='button' onclick='deleteBook(" + b.Id + ")'>Delete</button>" +
+                "</div>"
+            );
+        }
+
+        document.getElementById('div-my-books').innerHTML = blocks.join('');
+    } catch (e) {
+        alert('Failed to load books');
+    }
+}
+```
+
+### CREATE + UPDATE (2-in-1): SaveBook
+
+If `id` is empty or zero → INSERT (Create). If `id` has a value → UPDATE.
+
+**Backend:**
+```csharp
+static void SaveBook()
+{
+    HttpRequest Request = HttpContext.Current.Request;
+
+    int id = 0;
+    int.TryParse(Request.Form["id"] + "", out id);
+
+    string title = (Request.Form["title"] + "").Trim();
+    string author = (Request.Form["author"] + "").Trim();
+    int year = 0;
+    int.TryParse(Request.Form["year"] + "", out year);
+
+    // Validation
+    if (string.IsNullOrEmpty(title))
+    {
+        ApiHelper.WriteError("Title is required");
+        return;
+    }
+
+    if (string.IsNullOrEmpty(author))
+    {
+        ApiHelper.WriteError("Author is required");
+        return;
+    }
+
+    if (year < 1 || year > DateTime.Now.Year)
+    {
+        ApiHelper.WriteError("Please enter a valid year");
+        return;
+    }
+
+    using (MySqlConnection conn = new MySqlConnection(config.ConnString))
+    {
+        conn.Open();
+        using (MySqlCommand cmd = new MySqlCommand())
+        {
+            cmd.Connection = conn;
+            MySqlExpress m = new MySqlExpress(cmd);
+
+            Dictionary<string, object> dic = new Dictionary<string, object>();
+            dic["title"] = title;
+            dic["author"] = author;
+            dic["year"] = year;
+
+            if (id <= 0)
+            {
+                // CREATE - no id, insert new row
+                m.Insert("books", dic);
+                ApiHelper.WriteSuccess("Book added");
+            }
+            else
+            {
+                // UPDATE - has id, update existing row
+                m.Update("books", dic, "id", id);
+                ApiHelper.WriteSuccess("Book updated");
+            }
+        }
+    }
+}
+```
+
+**Frontend:**
+```javascript
+async function saveBook() {
+    var id = document.getElementById('book-id').value.trim();
+    var title = document.getElementById('book-title').value.trim();
+    var author = document.getElementById('book-author').value.trim();
+    var year = document.getElementById('book-year').value.trim();
+
+    var formData = new FormData();
+    formData.append('action', 'save-book');
+    formData.append('id', id);       // empty = create, has value = update
+    formData.append('title', title);
+    formData.append('author', author);
+    formData.append('year', year);
+
+    try {
+        var response = await fetch(API_URL, {
+            method: 'POST',
+            body: formData
+        });
+
+        var data = await response.json();
+
+        if (data.success) {
+            alert(data.message);
+            clearForm();
+            getAllBooksHtml(); // Refresh the list
+        } else {
+            alert(data.message);
+        }
+    } catch (e) {
+        alert('Something went wrong. Please try again.');
+    }
+}
+```
+
+### DELETE
+
+**Backend:**
+```csharp
+static void DeleteBook()
+{
+    HttpRequest Request = HttpContext.Current.Request;
+
+    int id = 0;
+    int.TryParse(Request.Form["id"] + "", out id);
+
+    if (id <= 0)
+    {
+        ApiHelper.WriteError("Invalid book ID");
+        return;
+    }
+
+    using (MySqlConnection conn = new MySqlConnection(config.ConnString))
+    {
+        conn.Open();
+        using (MySqlCommand cmd = new MySqlCommand())
+        {
+            cmd.Connection = conn;
+            MySqlExpress m = new MySqlExpress(cmd);
+
+            var p = new Dictionary<string, object>();
+            p["@id"] = id;
+
+            m.Execute("DELETE FROM books WHERE id = @id;", p);
+        }
+    }
+
+    ApiHelper.WriteSuccess("Book deleted");
+}
+```
+
+**Frontend:**
+```javascript
+async function deleteBook(id) {
+    if (!id) {
+        id = document.getElementById('book-id').value.trim();
+    }
+
+    if (!id) {
+        alert('No book selected');
+        return;
+    }
+
+    if (!confirm('Delete this book?')) return;
+
+    var formData = new FormData();
+    formData.append('action', 'delete-book');
+    formData.append('id', id);
+
+    try {
+        var response = await fetch(API_URL, {
+            method: 'POST',
+            body: formData
+        });
+
+        var data = await response.json();
+
+        if (data.success) {
+            alert(data.message);
+            clearForm();
+            getAllBooksHtml();
+        } else {
+            alert(data.message);
+        }
+    } catch (e) {
+        alert('Something went wrong. Please try again.');
+    }
+}
+```
+
+---
+
+## API Response Format
+
+All API responses follow this JSON structure:
+
+```javascript
+// Success
+{ "success": true, "message": "..." }
+
+// Success with data
+{ "success": true, "message": "...", "data": {...} }
+
+// Success with list
+{ "success": true, "items": [...] }
+
+// Error
+{ "success": false, "message": "Error description" }
+```
+
+---
+
+## File Upload Pattern
+
+**Frontend:**
+```javascript
+async function uploadFile() {
+    var fileInput = document.getElementById('fileUpload');
+    if (!fileInput.files.length) return;
+
+    var formData = new FormData();
+    formData.append('action', 'upload');
+    formData.append('parent_id', parentId);
+    formData.append('file', fileInput.files[0]);
+
+    var xhr = new XMLHttpRequest();
+
+    xhr.upload.onprogress = function (e) {
+        if (e.lengthComputable) {
+            var pct = Math.round((e.loaded / e.total) * 100);
+            document.getElementById('progress').textContent = pct + '%';
+        }
+    };
+
+    xhr.onload = function () {
+        var data = JSON.parse(xhr.responseText);
+        if (data.success) alert('Uploaded');
+        else alert(data.message);
+    };
+
+    xhr.open('POST', API_URL);
+    xhr.send(formData);
+}
+```
+
+**Backend:**
+```csharp
+static void UploadFile()
+{
+    HttpRequest Request = HttpContext.Current.Request;
+
+    if (Request.Files.Count == 0)
+    {
+        ApiHelper.WriteError("No file uploaded");
+        return;
+    }
+
+    var uploadedFiles = new List<object>();
+
+    for (int i = 0; i < Request.Files.Count; i++)
+    {
+        HttpPostedFile file = Request.Files[i];
+
+        if (file.ContentLength == 0)
+            continue;
+
+        string fileName = Path.GetFileName(file.FileName);
+        string savePath = HttpContext.Current.Server.MapPath("~/uploads/" + fileName);
+
+        try
+        {
+            file.SaveAs(savePath);
+
+            uploadedFiles.Add(new
+            {
+                success = true,
+                fileName = fileName,
+                filePath = "/uploads/" + fileName
+            });
+        }
+        catch (Exception ex)
+        {
+            uploadedFiles.Add(new
+            {
+                success = false,
+                fileName = fileName,
+                message = ex.Message
+            });
+        }
+    }
+
+    ApiHelper.WriteJson(uploadedFiles);
+}
+```
+
+## C# Conventions
+
+**Do not use dynamic-typed references.**
+
+| Cost | Why it matters |
+|------|----------------|
+| **No IntelliSense** | You lose autocomplete, refactoring, "Find All References" - the IDE goes blind |
+| **Runtime errors** | Typos like `arg.blakc` compile fine, crash only when that line executes |
+| **Slower** | Each `.member` access goes through the DLR `CallSite` cache - adds ~microseconds |
+| **No null-safety** | C# 8+ nullable reference types can't help you |
+| **Hard to grep** | Static analysis tools, dependency analyzers, and AI assistants struggle |
+| **Decompile-hostile** | `dynamic` compiles into CallSite plumbing that decompilers struggle to fold back into the original syntax |
+
+---
+
+## C# StringBuilder - Multiline String Interpolation
+
+When emitting HTML/JS from C# code-behind, prefer **multiline interpolated verbatim strings** (`$@"..."`) over many small `sb.Append("...")` calls with escaped double quotes.
+
+### Use Single-Quote HTML Attributes
+
+HTML accepts both `"` and `'` for attribute values. Using single quotes inside `$@"..."` avoids escaping every double quote as `""`.
+
+❌ **Don't** - escape-heavy, hard to read:
+
+```csharp
+sb.Append("<div class=\"someclass\">");
+sb.Append("....");
+sb.Append("</div>");
+```
+
+✅ **Do** - clean, readable, multiline:
+
+```csharp
+sb.Append($@"
+<div class='someclass'>
+...
+</div>");
+```
+
+> The single-quote convention applies specifically to attributes written **inside** a C# `$@"..."` string, where it avoids escaping. Static markup written directly in the `.aspx` page should use conventional double quotes (`ID="litSummary"`).
+
+---
+
+### Avoid Double-Brace Escapes - Split the Block
+
+Inside `$@"..."`, every literal `{` or `}` must be doubled as `{{` / `}}` - painful for JavaScript or CSS, which use braces heavily.
+
+**Rule:** Split your output by what each block needs.
+
+- Use `$@"..."` (interpolated) **only** for blocks needing C# substitution (e.g. `{itemId}`).
+- Use `@"..."` (plain verbatim) for JavaScript / CSS / JSON - no brace escaping required.
+
+When one output needs both, split into separate `Append` calls:
+
+```csharp
+// Interpolated block: substitutes itemId, itemName
+sb.Append($@"
+<div class='item' data-id='{itemId}'>
+    <span>{itemName}</span>
+    <button type='button' onclick='editItem({itemId})'>Edit</button>
+</div>
+");
+
+// Plain verbatim block: JS braces, no escaping needed.
+// Better yet - a fully static JS block like this belongs in the .aspx page
+// or an external .js file, not emitted from code-behind at all (see next section).
+sb.Append(@"
+<script>
+function editItem(id) {
+    fetch(API_URL + '?action=get_item&id=' + id)
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                showDialog(data.item);
+            }
+        });
+}
+</script>
+");
+```
+
+### Keep Static JS in the Frontend - Emit Only State
+
+When most of the JavaScript is static (event handlers, functions, logic) and only a small part is dynamic (IDs, state objects), don't emit the whole script from code-behind. Put the static `<script>` in the `.aspx` markup (or an external `.js`), and emit only a small state block into a `Literal`:
+
+Write static JavaScript as external source (external separate *.js file)
+
+```csharp
+// Code-behind emits only dynamic data
+sb.Append($@"
+<script>
+const editMode = '{editMode}';
+const memberId = {member_id};
+const pageState = {JsonConvert.SerializeObject(stateObject)};
+</script>");
+```

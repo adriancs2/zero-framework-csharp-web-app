@@ -1,0 +1,36 @@
+# /etc/systemd/system/hearthcms.service
+# Pillar 2: the OS process supervisor. systemd starts the self-contained
+# executable, restarts it if it dies, and sends SIGTERM on stop - the app
+# then stops accepting, drains in-flight requests (max 10 s) and flushes
+# the analytics queue before exiting.
+
+[Unit]
+Description=cshttp Hearth CMS (C# web application without ASP.NET/Kestrel)
+After=network.target
+
+[Service]
+Type=simple
+User=hearthcms
+Group=hearthcms
+WorkingDirectory=/opt/hearthcms
+ExecStart=/opt/hearthcms/HearthCms --bind 127.0.0.1 --port 5080 --contentroot /opt/hearthcms --quiet
+Restart=always
+RestartSec=2
+KillSignal=SIGTERM
+TimeoutStopSec=20
+Environment=DOTNET_gcServer=0
+Environment=DOTNET_CLI_TELEMETRY_OPTOUT=1
+
+# Hardening: the process can only write inside its own folder.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/hearthcms
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

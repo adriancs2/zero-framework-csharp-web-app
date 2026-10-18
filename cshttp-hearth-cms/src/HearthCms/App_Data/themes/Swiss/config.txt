@@ -1,0 +1,7 @@
+[Theme]
+name = Swiss
+description = International Typographic Style. Radical restraint: a strict visible grid, neo-grotesque type, huge type-scale contrast, one signal-red accent and generous whitespace. The discipline is the design. Inter + JetBrains Mono.
+author = Hearth CMS
+url = Github Hearth CMS
+version = 1
+date: 2026-06-05

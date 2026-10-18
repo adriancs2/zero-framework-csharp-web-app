@@ -1,0 +1,54 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    cshttp Hearth CMS - Hearth CMS running as a standalone C# console application.
+
+    No ASP.NET, no System.Web, no IIS pipeline, no ASP.NET Core, no Kestrel.
+    Sockets come from the base class library (System.Net.Sockets); HTTP/1.1
+    parsing comes from the embedded cshttp source files (./cshttp). The CMS code
+    under ./engine is the original Hearth CMS, running on a small System.Web-shaped
+    facade (./Web) so the Pageless handlers port unchanged.
+
+    Third-party packages are limited to what a CMS needs below HTTP:
+      - System.Data.SQLite.Core : the same SQLite provider the IIS build used
+      - Newtonsoft.Json         : the same JSON library the IIS build used
+      - SkiaSharp               : cross-platform image resize (System.Drawing is Windows-only)
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>HearthCms</RootNamespace>
+    <AssemblyName>HearthCms</AssemblyName>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <ServerGarbageCollection>false</ServerGarbageCollection>
+    <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
+    <TieredPGO>true</TieredPGO>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <!-- The original code base predates nullable/analyzer warnings; keep the build log readable. -->
+    <NoWarn>$(NoWarn);CS0168;CS0219;CS0162;CS0414;CS0649;CS0169;CS1998;CS8981;SYSLIB0021;SYSLIB0023;SYSLIB0045</NoWarn>
+    <Version>1.0.0</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.119" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="SkiaSharp" Version="3.119.0" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.119.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Documentation inside the source tree is not compiled or copied. -->
+    <None Remove="engine\**\*.md" />
+  </ItemGroup>
+
+  <!-- Content root: public static folders + protected App_Data (never served). -->
+  <ItemGroup>
+    <Content Include="css\**\*;js\**\*;fonts\**\*;assets\**\*;media\**\*;favicon.ico" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="App_Data\**\*" Exclude="App_Data\page_cache\**;App_Data\*.sqlite-journal;App_Data\*.sqlite-wal;App_Data\*.sqlite-shm" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

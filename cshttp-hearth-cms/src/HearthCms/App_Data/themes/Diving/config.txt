@@ -1,0 +1,7 @@
+[Theme]
+name = Diving
+description = A bright aquatic theme for diving & SUP (light). Sun-on-water turquoise and aqua with a coral-orange pop, clean rounded buoyant forms. Outfit + Figtree + JetBrains Mono.
+author = Hearth CMS
+url = Github Hearth CMS
+version = 1
+date: 2026-06-05

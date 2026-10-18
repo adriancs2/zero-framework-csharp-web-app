@@ -1,0 +1,20 @@
+﻿<article class='doc doc-layout layout-stack'>
+    <div class='container container-narrow'>
+        <header class='doc-header'>
+            {{breadcrumbs}}
+            <h1>{{article_title}}</h1>
+            <div class='doc-meta-row'>
+                {{published_date}}
+                {{updated_date}}
+                {{article_author}}
+            </div>
+        </header>
+        {{cover_image}}
+        <div class='doc-content prose'>
+            {{article_content}}
+        </div>
+    </div>
+    <div class='container container-narrow'>
+        {{article_aside}}
+    </div>
+</article>

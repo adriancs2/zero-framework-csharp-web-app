@@ -1,0 +1,7 @@
+[Theme]
+name = Folio
+description = Editorial print magazine. Ivory paper, black ink and a vermilion rule, with a masthead, drop caps and a numbered index.
+author = Hearth CMS
+url = Github Hearth CMS
+version = 1
+date: 2026-06-04

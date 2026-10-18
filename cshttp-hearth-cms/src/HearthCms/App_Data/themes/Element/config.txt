@@ -1,0 +1,7 @@
+[Theme]
+name = Element
+description = A blueprint / periodic-table theme. Deep ink-navy ground, a luminous lime accent and a dot-grid texture. Newsreader + Archivo + JetBrains Mono. Content reads as element tiles.
+author = Hearth CMS
+url = Github Hearth CMS
+version = 1
+date: 2026-06-05

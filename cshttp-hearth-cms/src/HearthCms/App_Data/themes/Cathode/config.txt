@@ -1,0 +1,7 @@
+[Theme]
+name = Cathode
+description = A warm amber CRT-terminal theme. Phosphor amber on tube-black with scanlines, screen-curve vignette, a faint flicker and a blinking cursor. Posts read like log entries; the home boots up. Pure CSS, IBM Plex Mono.
+author = Hearth CMS
+url = Github Hearth CMS
+version = 1
+date: 2026-06-05

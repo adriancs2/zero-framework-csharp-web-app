@@ -1,0 +1,7 @@
+[Theme]
+name = Legal
+description = An authoritative law-firm theme (light). Ivory parchment, deep navy ink and a gilt-gold accent — the timeless palette of justice and gilt-edged law books. Formal and scholarly. Libre Baskerville + Source Sans 3 + JetBrains Mono.
+author = Hearth CMS
+url = Github Hearth CMS
+version = 1
+date: 2026-06-05

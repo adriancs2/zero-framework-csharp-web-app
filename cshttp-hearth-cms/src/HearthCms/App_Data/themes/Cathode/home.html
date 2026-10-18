@@ -1,0 +1,47 @@
+﻿<section class='hero'>
+    <div class='container'>
+        <p class='boot-line'><span class='prompt'>BIOS</span> POST &mdash; memory ok &mdash; <span class='ok'>[ OK ]</span></p>
+        <p class='boot-line'><span class='prompt'>boot</span> mounting /dev/site &mdash; loading kernel &mdash; <span class='ok'>[ OK ]</span></p>
+        <p class='boot-line'><span class='prompt'>init</span> starting <span data-edit='site_name'>Cathode</span> &mdash; <span class='ok'>[ OK ]</span></p>
+        <span class='hero-eyebrow' data-edit='hero_eyebrow'>session established</span>
+        <h1 class='hero-title cursor' data-edit='site_tagline'>Words on a glowing screen.</h1>
+        <p class='hero-sub' data-edit='site_description'>A terminal-green journal &mdash; server-rendered and dependency-light.</p>
+        <div class='hero-actions'>
+            <a href='/latest-post' data-edit-href='cta1_url' class='btn btn-primary'><span data-edit='cta1_label'>run --latest</span></a>
+            <a href='/about' data-edit-href='cta2_url' class='btn btn-ghost'><span data-edit='cta2_label'>man about</span></a>
+        </div>
+    </div>
+</section>
+
+<section class='section'>
+    <div class='container'>
+        <div class='statusbar'>
+            <span><span class='key'>host</span> <span data-edit='status_host'>cathode.local</span></span>
+            <span><span class='key'>status</span> <span class='ok' data-edit='status_state'>online</span></span>
+            <span><span class='key'>load</span> <span data-edit='status_load'>0.07 0.04 0.01</span></span>
+            <span><span class='key'>tty</span> <span data-edit='status_tty'>/dev/pts/0</span></span>
+        </div>
+    </div>
+</section>
+
+{{latest_posts_block}}
+
+<section class='section section-bordered'>
+    <div class='container features-grid'>
+        <div class='feature'>
+            <span class='feature-icon'><i class='fa-solid fa-terminal' data-edit-icon='feat1_icon'></i></span>
+            <h3 data-edit='feat1_title'>plain text first</h3>
+            <p data-edit='feat1_body'>No chrome, no clutter. Words on a glowing screen, the way the machine intended.</p>
+        </div>
+        <div class='feature'>
+            <span class='feature-icon'><i class='fa-solid fa-bolt' data-edit-icon='feat2_icon'></i></span>
+            <h3 data-edit='feat2_title'>fast as a tty</h3>
+            <p data-edit='feat2_body'>Server-rendered and dependency-light. Pages print to screen with no spin-up.</p>
+        </div>
+        <div class='feature'>
+            <span class='feature-icon'><i class='fa-solid fa-database' data-edit-icon='feat3_icon'></i></span>
+            <h3 data-edit='feat3_title'>everything logged</h3>
+            <p data-edit='feat3_body'>Posts, pages and categories &mdash; one tidy filesystem you read like a log.</p>
+        </div>
+    </div>
+</section>

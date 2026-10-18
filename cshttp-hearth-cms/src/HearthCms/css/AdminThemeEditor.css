@@ -1,0 +1,30 @@
+.te-actions{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.te-danger{color:#b91c1c}
+.te-meta{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:16px 18px;margin-bottom:16px}
+.te-meta-row{display:flex;flex-wrap:wrap;gap:10px 26px;margin-bottom:8px}
+.te-meta-row:last-child{margin-bottom:0}
+.te-meta-item{display:flex;flex-direction:column;gap:2px}
+.te-meta-k{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#9ca3af;font-weight:600}
+.te-meta-v{font-size:14px;color:#111827;font-weight:500}
+.te-meta-desc{margin:10px 0 0;color:#6b7280;font-size:14px}
+.te-grid{display:grid;grid-template-columns:280px 1fr;gap:16px;align-items:start}
+.te-files{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:8px;max-height:72vh;overflow:auto;position:sticky;top:12px}
+.te-fsec{margin-bottom:10px}
+.te-fsec h4{margin:8px 8px 6px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#9ca3af}
+.te-empty{margin:0 10px 8px;color:#c0c4cc;font-size:13px}
+.te-flist{list-style:none;margin:0;padding:0}
+.te-file{display:flex;align-items:center;gap:8px;width:100%;text-align:left;border:0;background:none;padding:7px 10px;border-radius:8px;cursor:pointer;font-size:13.5px;color:#374151;font-family:inherit}
+.te-file i{color:#9ca3af;width:16px;text-align:center}
+.te-file:hover{background:#f3f4f6;color:#111827}
+.te-file.is-active{background:#eef2ff;color:#3730a3;font-weight:600}
+.te-file.is-active i{color:#6366f1}
+.te-file.is-file-missing{color:#b9c0c9;font-style:italic}
+.te-file.is-file-missing i{color:#d4d8de}
+.te-file.is-file-missing::after{content:'(missing)';margin-left:auto;font-size:10.5px;color:#cbd0d7;font-style:normal}
+.te-editor{background:#fff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;display:flex;flex-direction:column;min-height:72vh}
+.te-editor-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border-bottom:1px solid #e5e7eb;background:#fafafa}
+.te-curfile{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;color:#374151;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.te-editor-tools{display:flex;gap:8px;flex-shrink:0}
+.te-textarea{flex:1;min-height:64vh;border:0;outline:none;resize:vertical;padding:16px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;line-height:1.6;color:#1f2937;tab-size:4;white-space:pre}
+.te-iframe{flex:1;min-height:72vh;border:0;width:100%;background:#fff}
+@media(max-width:820px){.te-grid{grid-template-columns:1fr}.te-files{position:static;max-height:none}}

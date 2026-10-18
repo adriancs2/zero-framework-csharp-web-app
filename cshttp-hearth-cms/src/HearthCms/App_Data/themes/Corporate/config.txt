@@ -1,0 +1,7 @@
+[Theme]
+name = Corporate
+description = A professional business & financial theme. A refined dark navy-slate ground so glass-tower imagery glows, with a confident corporate blue, a sharp teal "ledger" accent and crisp neutral text. IBM Plex Serif + Sans + Mono.
+author = Hearth CMS
+url = Github Hearth CMS
+version = 1
+date: 2026-06-05

@@ -1,0 +1,13 @@
+bin/
+obj/
+publish/
+media/
+.vs/
+*.user
+cshttp-hearth-cms/TEST-CREDENTIALS.local.txt
+cshttp-hearth-cms/src/HearthCms/App_Data/config.txt
+cshttp-hearth-cms/src/HearthCms/App_Data/hearth-cms.sqlite
+cshttp-hearth-cms/src/HearthCms/App_Data/hearth_analytics.sqlite
+cshttp-hearth-cms/src/HearthCms/App_Data/logs/
+cshttp-hearth-cms/src/HearthCms/App_Data/page_cache/
+cshttp-hearth-cms/src/HearthCms/App_Data/reset_admin.txt

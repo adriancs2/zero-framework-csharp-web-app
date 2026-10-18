@@ -1,0 +1,7 @@
+[Theme]
+name = Mosaic
+description = Bento-grid glassmorphism. Frosted glass tiles floating on a living mesh-gradient, with a floating pill nav.
+author = Hearth CMS
+url = Github Hearth CMS
+version = 1
+date: 2026-06-04

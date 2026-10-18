@@ -1,0 +1,7 @@
+[Theme]
+name = Victoria
+description = A gaslit Victorian-steampunk theme. Near-black iron lit by a warm gaslight glow, with brass, copper and bronze. Riveted metal plates, gear ornaments and filigree rules. Cinzel + EB Garamond + Special Elite.
+author = Hearth CMS
+url = Github Hearth CMS
+version = 1
+date: 2026-06-05

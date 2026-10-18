@@ -1,0 +1,7 @@
+[Theme]
+name = LegalDark
+description = An authoritative law-firm theme (dark). Deep navy-black chambers lit by gilt gold, with warm ivory text and law-book maroon — the evening counterpart to Legal. Formal and scholarly. Libre Baskerville + Source Sans 3 + JetBrains Mono.
+author = Hearth CMS
+url = Github Hearth CMS
+version = 1
+date: 2026-06-05
